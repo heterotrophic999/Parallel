@@ -7,11 +7,11 @@ int main(int argc, char *argv[]){
     int size = strtol(argv[2], NULL, 10); 
     int iter_max = strtol(argv[3], NULL, 10); 
     
-    double A[size+2][size+2];
-    // double** A = (double**)malloc((size + 2) * sizeof(double*));
-    // for (int i = 0; i < size + 2; ++i) {
-    //     A[i] = (double*)calloc(size + 2, sizeof(double));
-    // }
+    //double A[size+2][size+2];
+    double** A = (double**)malloc((size + 2) * sizeof(double*));
+    for (int i = 0; i < size + 2; ++i) {
+        A[i] = (double*)calloc(size + 2, sizeof(double));
+    }
 
     A[0][0] = 10;
     A[size+1][0] = 20;
@@ -43,16 +43,16 @@ int main(int argc, char *argv[]){
 //        std::cout << std::endl;
 //    }
 
-    // double** Anew = (double**)malloc((size + 2) * sizeof(double*));
-    // for (int i = 0; i < size + 2; ++i) {
-    //     Anew[i] = (double*)calloc(size + 2, sizeof(double));
-    // }
-    double Anew[size+2][size+2];
+    double** Anew = (double**)malloc((size + 2) * sizeof(double*));
+    for (int i = 0; i < size + 2; ++i) {
+        Anew[i] = (double*)calloc(size + 2, sizeof(double));
+    }
+    //double Anew[size+2][size+2];
 
     double err = 1;
     int iter = 0;
     //double** p;
-    #pragma acc data copy(A) create(Anew) create(err)
+    #pragma acc data copyin(A[0:size+2][0:size+2],Anew[0:size+2][0:size+2]) copy(err)
     {
     while (err > tol && iter < iter_max){
         iter++;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
         // p = A;
         // A = Anew;
         // Anew = p;
-
+        #pragma acc loop independent collapse(2)
         for (int j = 1; j < size + 1; j++) {
             for (int i = 1; i < size + 1; i++) {
                 A[i][j] = Anew[i][j];
