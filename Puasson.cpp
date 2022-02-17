@@ -1,9 +1,17 @@
 #include <iostream>
 #include <cmath>
 
-int main(){
-    int size = 2048;
-    double A[size+2][size+2];
+int main(int argc, char *argv[]){
+    double tol = atof(argv[1]); 
+    int size = strtol(argv[2], NULL, 10); 
+    int iter_max = strtol(argv[3], NULL, 10); 
+
+    double** A = (double**)malloc((size + 2) * sizeof(double*));
+    for (int i = 0; i < size + 2; ++i) {
+        A[i] = (double*)calloc(size + 2, sizeof(double));
+    }
+
+    //double A[size+2][size+2];
 
     A[0][0] = 10;
     A[size+1][0] = 20;
@@ -35,17 +43,23 @@ int main(){
 //        std::cout << std::endl;
 //    }
 
-    double Anew[size+2][size+2];
-    #pragma acc data copy(A) create(Anew)
-    {
-    int iter_max = 1000000;
-    double tol = 0.000001;
+    double** Anew = (double**)malloc((size + 2) * sizeof(double*));
+    for (int i = 0; i < size + 2; ++i) {
+        Anew[i] = (double*)calloc(size + 2, sizeof(double));
+    }
 
     double err = 1;
+    #pragma acc data copy(A) create(Anew) create(err)
+    {
+    //int iter_max = 1000000;
+    //double tol = 0.000001;
+
     int iter = 0;
     while (err > tol && iter < iter_max){
         iter++;
-        err = 0;
+
+        #pragma acc kernels
+        err = 0.0;
 
         #pragma acc kernels
         {
@@ -64,6 +78,7 @@ int main(){
         }
         }
         if (iter%100 == 0 || iter==1)
+        #pragma acc update self(err)
             std::cout << iter << " " << err << std::endl;
     }
     }
